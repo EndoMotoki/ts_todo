@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Todo List</title>
+<style>
+    form.form-example {
+        display: table;
+    }
+
+    div.form-example {
+        display: table-row;
+    }
+
+    label,
+    input {
+        display: table-cell;
+        margin-bottom: 10px;
+    }
+
+    label {
+        padding-right: 10px;
+    }
+
+</style>
+</head>
+
+<body>
+<h1>タスク追加画面</h1>
+
+<form action="/create" method="post" class="form-example">
+    <div class="form-example">
+        <label for="title">タスク名: </label>
+        <input type="text" name="title" id="title" required />
+    </div>
+    <div class="form-example">
+        <label for="description">タスク説明文: </label>
+        <input type="text" name="description" id="description" required />
+    </div>
+    <div class="form-example">
+        <input type="submit" value="タスク追加!" />
+    </div>
+</form>
+
+</body>

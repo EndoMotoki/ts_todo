@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <style>
+        .completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .task-list {
+            list-style: none;
+            padding: 0;
+        }
+        .task-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .task-checkbox {
+            margin-right: 10px;
+        }
+        .task-info {
+            flex-grow: 1;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .add_button {
+            background-color: #04AA6D;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            position: fixed;
+            right: 50px;
+        }
+
+        .delete_button {
+            background-color: #ff5159;
+            border: none;
+            color: white;
+            font-size: 16px;
+        }
+    </style>
+    <script>
+        // タスクの状態を更新する関数
+        async function updateTaskStatus(taskId, status) {
+            try {
+                const response = await fetch(`/update/${taskId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ taskId,status })
+                });
+
+                if (!response.ok) {
+                    throw new Error('タスクの更新に失敗しました');
+                }
+
+                const data = await response.json();
+
+                // タスクが完了状態または未完了状態になったことを反映
+                const taskElement = document.getElementById(`task-${taskId}`);
+                const statusElement = taskElement.querySelector('.task-info');
+                const checkbox = taskElement.querySelector('.task-checkbox');
+
+                // 完了状態に応じてUIを更新
+                if (data.complete_flg) {
+                    statusElement.classList.add('completed');
+                    checkbox.checked = true;
+                } else {
+                    statusElement.classList.remove('completed');
+                    checkbox.checked = false;
+                }
+
+                location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+                throw error;
+            }
+        }
+
+        async function deleteTask(taskId) {
+            if(confirm('本当に削除しますか？')){
+                try{
+                    const response = await fetch(`/delete/${taskId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({taskId})
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('タスクの削除に失敗しました。');
+                    }
+
+                    location.reload();
+                }catch (error){
+                    console.error('Error:',error);
+                    throw error;
+                }
+
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="section">
+    <button class="add_button" onclick="location.href='createTask'">タスクを追加</button>
+    <h1>未完了のタスク</h1>
+    <% if (incompleteTasks.length === 0) { %>
+    <h2>未完了のタスクはありません</h2>
+        <% } else { %>
+    <ul class="task-list" id="incomplete-tasks">
+        <% incompleteTasks.filter(task => !task.complete_flg).forEach(task => { %>
+            <li class="task-item" id="task-<%= task.task_id %>">
+                <input type="checkbox"
+                       class="task-checkbox"
+                       onchange="updateTaskStatus('<%= task.task_id %>',1)"
+                       id="task-<%= task.id %>">
+                <div class="task-info">
+                    <span class="task-title"><%= task.task_title %></span>
+                    (<span class="task-description"><%= task.task_description %></span>)
+                    <br>
+                    <small>タスク作成日: <%= task.created_on %></small>
+                </div>
+                <button onclick="deleteTask('<%= task.task_id %>')" class="delete_button">削除</button>
+            </li>
+        <% }); %>
+    </ul>
+    <% } %>
+</div>
+
+<div class="section">
+    <h2>完了済みタスク</h2>
+    <% if (completeTasks.length === 0) { %>
+        <h3>完了のタスクはありません</h3>
+    <% } else { %>
+    <ul class="task-list" id="completed-tasks">
+        <% completeTasks.filter(task => task.complete_flg == 1).forEach(task => { %>
+            <li class="task-item" id="task-<%= task.task_id %>">
+                <input type="checkbox"
+                       class="task-checkbox"
+                       checked
+                       onchange="updateTaskStatus('<%= task.task_id %>',0)"
+                       id="task-<%= task.id %>">
+                <div class="task-info completed">
+                    <span class="task-title"><%= task.task_title %></span>
+                    (<span class="task-description"><%= task.task_description %></span>)
+                    <br>
+                    <small>タスク作成日: <%= task.created_on %></small>
+                </div>
+                <button onclick="deleteTask('<%= task.task_id %>')" class="delete_button">削除</button>
+            </li>
+        <% }); %>
+    </ul>
+    <% } %>
+</div>
+
+</body>
+</html>
